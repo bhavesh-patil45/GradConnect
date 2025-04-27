@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head') %>
+    <title>GradConnect - Login</title>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-md p-8 space-y-6">
+      <h2 class="text-2xl font-bold text-center text-gray-800">GradConnect - Login</h2>
+
+      <form action="/login" method="POST" class="space-y-5">
+        <!-- Role -->
+        <div>
+          <label for="role" class="block mb-1 font-medium text-gray-700">Select Role</label>
+          <select name="role" id="role" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="Admin">Admin</option>
+            <option value="Alumni">Alumni</option>
+            <option value="Student">Student</option>
+          </select>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label for="email" class="block mb-1 font-medium text-gray-700">Email</label>
+          <input type="email" name="email" id="email" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block mb-1 font-medium text-gray-700">Password</label>
+          <input type="password" name="password" id="password" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="text-right">
+          <a href="/forgot-password" class="text-sm text-blue-600 hover:underline">Forgot Password?</a>
+        </div>
+
+        <!-- Submit Button -->
+        <div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Login</button>
+        </div>
+      </form>
+
+      <!-- Register Link -->
+      <p class="text-center text-sm text-gray-600">
+        Don't have an account?
+        <a href="/admin/register" class="text-blue-600 hover:underline">Admin</a>
+        <a href="/alumni/register" class="text-blue-600 hover:underline">Alumni</a>
+        <a href="/student/register" class="text-blue-600 hover:underline">Student</a>
+
+      </p>
+    </div>
+  </body>
+</html>

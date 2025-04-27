@@ -1,0 +1,61 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f1f2f5;
+  }
+  
+  .navbar {
+    background-color: white;
+    padding: 10px 30px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .nav-links a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .dashboard-container {
+    display: flex;
+    padding: 20px;
+  }
+  
+  .feed {
+    flex: 2;
+    margin-right: 20px;
+  }
+  
+  .post-card {
+    background: white;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .post-image {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 10px;
+  }
+  
+  .sidebar {
+    flex: 1;
+  }
+  
+  .suggestions, .jobs {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  

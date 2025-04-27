@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/head') %>
+    <title>Alumni Registration - GradConnect</title>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-xl bg-white rounded-2xl shadow-lg p-8 space-y-6">
+      <h2 class="text-2xl font-bold text-center text-gray-800">Alumni Registration - GradConnect</h2>
+
+      <form action="/alumni/register" method="POST" class="space-y-4">
+        <!-- Name -->
+        <div>
+          <label for="name" class="block mb-1 font-medium text-gray-700">Full Name</label>
+          <input type="text" name="name" placeholder="Enter Full Name" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label for="email" class="block mb-1 font-medium text-gray-700">Email</label>
+          <input type="email" name="email" placeholder="Email" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block mb-1 font-medium text-gray-700">Password</label>
+          <div class="relative">
+            <input type="password" id="password" name="password" placeholder="Password" required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePasswordVisibility()">👁️</span>
+          </div>
+        </div>
+
+        <!-- Batch -->
+        <div>
+          <label for="batch" class="block mb-1 font-medium text-gray-700">Batch</label>
+          <select name="batch" id="batch" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">-- Select Batch --</option>
+            <% for (let start = 2000; start <= 2030; start++) { 
+              let end = start + 4;
+              let value = `${start}-${end}`;
+            %>
+              <option value="<%= value %>"><%= value %></option>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- Department -->
+        <div>
+          <label for="department" class="block mb-1 font-medium text-gray-700">Department</label>
+          <input type="text" name="department" placeholder="Department" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <!-- Current Company -->
+        <div>
+          <label for="currentCompany" class="block mb-1 font-medium text-gray-700">Current Company</label>
+          <input type="text" name="currentCompany" placeholder="Current Company" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <!-- Designation -->
+        <div>
+          <label for="designation" class="block mb-1 font-medium text-gray-700">Designation</label>
+          <input type="text" name="designation" placeholder="Designation" required
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <!-- Submit Button -->
+        <div>
+          <button type="submit"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Register</button>
+        </div>
+      </form>
+
+      <p class="text-center text-sm text-gray-600">
+        Already registered? <a href="/login" class="text-blue-600 hover:underline">Login here</a>
+      </p>
+    </div>
+
+    <script>
+      function togglePasswordVisibility() {
+        const pwd = document.getElementById('password');
+        pwd.type = pwd.type === 'password' ? 'text' : 'password';
+      }
+    </script>
+  </body>
+</html>
