@@ -1,20 +1,34 @@
-// models/Post.js
-const mongoose = require('mongoose');
-
-const commentSchema = new mongoose.Schema({
-  user: String,
-  text: String,
-  createdAt: { type: Date, default: Date.now }
-});
+const mongoose = require("mongoose");
 
 const postSchema = new mongoose.Schema({
-  content: String,
-  image: String,
-  role: String,
-  createdBy: mongoose.Schema.Types.ObjectId,
-  createdAt: { type: Date, default: Date.now },
-  likes: { type: Number, default: 0 },
-  comments: [commentSchema]
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  caption: {
+    type: String,
+    required: true
+  },
+  image: {
+    type: String
+  },
+  likes: {
+    type: Number,
+    default: 0
+  },
+  
+comments: {
+  type: [
+    {
+      text: String,
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    }
+  ],
+  default: [] // ✅ Always define this
+}
+
 });
+
 
 module.exports = mongoose.model("Post", postSchema);

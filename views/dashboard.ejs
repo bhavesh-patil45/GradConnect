@@ -1,165 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>GradConnect Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .section.hidden {
+      display: none;
+    }
+
+    .nav-icon {
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .nav-icon.active {
+      color: #2563eb;
+      transform: scale(1.2);
+    }
+
+    @media (max-width: 768px) {
+      aside {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        flex-direction: row;
+        justify-content: space-around;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      main {
+        padding-bottom: 80px;
+      }
+    }
   </style>
 </head>
+
 <body class="bg-gray-100">
 
   <!-- Header -->
   <header class="bg-white shadow flex justify-between items-center px-6 py-4">
-    <h1 class="text-2xl font-bold text-blue-600">GradConnect</h1>
+    <span onclick="showSection('home')" class="text-2xl font-bold text-blue-600 cursor-pointer">GradConnect</span>
     <p class="text-sm text-gray-600">Welcome, <%= name %> (<%= role %>)</p>
+    <a href="/logout" class="hover:opacity-80">
+      <img src="/images/logout.jpg" class="h-8 w-8" alt="Logout" />
+    </a>
   </header>
 
   <div class="flex h-[calc(100vh-64px)]">
-    
     <!-- Sidebar -->
     <aside class="w-20 bg-white shadow flex flex-col items-center py-6 space-y-6">
-      <button onclick="showSection('home')" class="text-2xl hover:text-blue-600" title="Home">🏠</button>
-      <button onclick="showSection('chat')" class="text-2xl hover:text-blue-600" title="Chat">💬</button>
-      <button onclick="showSection('post')" class="text-2xl hover:text-blue-600" title="Post">➕</button>
-      <button onclick="showSection('jobs')" class="text-2xl hover:text-blue-600" title="Jobs">💼</button>
-      <button onclick="showSection('profile')" class="text-2xl hover:text-blue-600" title="Profile">👤</button>
+      <button onclick="showSection('home', this)" class="nav-icon text-2xl hover:text-blue-600 active"
+        title="Home">🏠</button>
+      <button onclick="showSection('notifications', this)" class="nav-icon text-2xl hover:text-blue-600"
+        title="Notifications">🔔</button>
+      <button onclick="showSection('chat', this)" class="nav-icon text-2xl hover:text-blue-600" title="Chat">💬</button>
+      <button onclick="showSection('post', this)" class="nav-icon text-2xl hover:text-blue-600" title="Post">➕</button>
+      <button onclick="showSection('jobs', this)" class="nav-icon text-2xl hover:text-blue-600" title="Jobs">💼</button>
+      <button onclick="showSection('profile', this)" class="nav-icon text-2xl hover:text-blue-600"
+        title="Profile">👤</button>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto p-6 space-y-6">
 
-<!-- Home Feed -->
+      <!-- Home Section -->
       <section id="home" class="section">
-        <h2 class="text-xl font-semibold mb-4">Home Feed</h2>
-        <div class="space-y-4">
-          <% posts.forEach(post => { %>
-            <div class="bg-white rounded-lg shadow-md p-4">
-              <div class="flex items-center mb-2">
-                <img src="/default-avatar.png" class="h-10 w-10 rounded-full mr-3" alt="User" />
-                <div>
-                  <p class="font-semibold text-gray-700"><%= post.name %></p>
-                  <small class="text-gray-500 text-xs"><%= post.role %> • <%= post.time %></small>
+        <h2 class="text-xl font-bold mb-4">Home Feed</h2>
+        <div class="space-y-6">
+          <% if (posts && posts.length> 0) { %>
+            <% posts.forEach(post=> { %>
+              <div class="bg-white rounded-lg shadow p-4 space-y-3">
+                <div class="flex items-center space-x-3">
+                  <img src="<%= post.user?.profileImage || '/images/default-avatar.png' %>"
+                    class="w-10 h-10 rounded-full">
+                  <div>
+                    <p class="font-semibold">
+                      <%= post.user?.name || 'Unknown User' %>
+                    </p>
+                    <small class="text-gray-500">
+                      <%= post.createdAt ? post.createdAt.toDateString() : '' %>
+                    </small>
+                  </div>
                 </div>
+
+                <p>
+                  <%= post.content %>
+                </p>
+                <% if (post.image) { %>
+                  <img src="<%= post.image %>" class="rounded-lg w-full object-contain max-h-[500px]" />
+                  <% } %>
+
+                    <div class="flex space-x-4 text-sm text-gray-600 mt-2">
+                      <form action="/post/<%= post._id %>/like" method="POST">
+                        <button type="submit">❤️ <%= post.likes || 0 %> Likes</button>
+                      </form>
+                      <span>💬 <%= post.comments?.length || 0 %> Comments</span>
+                    </div>
+
+                    <ul class="space-y-1 text-sm text-gray-700">
+                      <% (post.comments || []).forEach(comment=> { %>
+                        <li><strong>
+                            <%= comment.user?.name || 'User' %>:
+                          </strong>
+                          <%= comment.text %>
+                        </li>
+                        <% }) %>
+                    </ul>
+
+                    <form action="/post/<%= post._id %>/comment" method="POST" class="mt-2 space-y-2">
+                      <input name="text" placeholder="Add a comment..." class="border rounded w-full p-2" required>
+                      <button class="text-blue-600 hover:underline">Comment</button>
+                    </form>
               </div>
-              <p class="mb-2"><%= post.content %></p>
-              <% if (post.image) { %>
-                <img src="<%= post.image %>" class="rounded-lg w-full object-cover max-h-96 mb-2" />
-              <% } %>
-              <div class="text-sm text-gray-500 flex space-x-4 mt-2">
-                <span>👍 0 Likes</span>
-                <span>💬 0 Comments</span>
-              </div>
-            </div>
-          <% }) %>
+              <% }) %>
+                <% } else { %>
+                  <p class="text-gray-600">No posts yet.</p>
+                  <% } %>
         </div>
       </section>
 
-      <!-- Chat Section -->
+      <!-- Notifications -->
+      <section id="notifications" class="section hidden">
+        <h2 class="text-xl font-bold mb-4">Notifications</h2>
+        <p class="text-gray-600">You currently have no new notifications.</p>
+      </section>
+
+      <!-- Chat -->
       <section id="chat" class="section hidden">
-        <h2 class="text-xl font-semibold mb-4">Chat</h2>
-        <div id="chat-box" class="bg-gray-100 p-2 h-64 overflow-y-auto mb-2"></div>
-<form id="chat-form">
-  <input id="chat-input" placeholder="Type a message..." class="border px-2 py-1 w-full">
-</form>
-
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  const socket = io();
-  const form = document.getElementById('chat-form');
-  const input = document.getElementById('chat-input');
-  const chatBox = document.getElementById('chat-box');
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    socket.emit('chatMessage', input.value);
-    input.value = '';
-  });
-
-  socket.on('chatMessage', msg => {
-    const msgElem = document.createElement('div');
-    msgElem.textContent = msg;
-    chatBox.appendChild(msgElem);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
-</script>
+        <h2 class="text-xl font-bold mb-4">Chat</h2>
+        <p class="text-gray-600">Chat feature coming soon.</p>
       </section>
 
-<!-- Create Post -->
-<section id="post" class="section hidden">
-    <h2 class="text-xl font-semibold mb-4">Create a Post</h2>
-    <form action="/post" method="POST" enctype="multipart/form-data" class="space-y-3">
-      <textarea name="content" placeholder="Write something..." class="w-full border p-2 rounded" required></textarea>
-      <input type="file" name="image" accept="image/*" class="block" />
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Post</button>
-    </form>
-  
-    <h3 class="text-lg font-semibold mt-6 mb-4">Your Posts</h3>
-    <% posts.forEach(post => { %>
-      <div class="bg-white rounded-lg shadow-md p-4 space-y-2">
-        <p><%= post.content %></p>
-        
-        <% if (post.image) { %>
-          <img src="<%= post.image %>" class="w-full rounded max-h-80 object-cover" />
-        <% } %>
-  
-        <div class="flex space-x-4 text-sm text-gray-500 mt-2">
-          <form action="/post/<%= post._id %>/like" method="POST">
-            <button>❤️ Like (<%= post.likes %>)</button>
-          </form>
-          <span>💬 <%= post.comments.length %> Comments</span>
-        </div>
-  
-        <ul class="text-sm text-gray-700">
-          <% post.comments.forEach(comment => { %>
-            <li>• <strong><%= comment.user %>:</strong> <%= comment.text %></li>
-          <% }) %>
-        </ul>
-  
-        <form action="/post/<%= post._id %>/comment" method="POST" class="mt-2">
-          <input name="text" placeholder="Add a comment..." class="border px-2 py-1 rounded w-full" required>
-          <button class="text-blue-600 mt-1 hover:underline">Comment</button>
+      <!-- Create Post -->
+      <section id="post" class="section hidden">
+        <h2 class="text-xl font-bold mb-4">Create a Post</h2>
+        <form action="/post" method="POST" enctype="multipart/form-data" class="space-y-4">
+          <textarea name="content" placeholder="What's on your mind?" class="border rounded w-full p-3"
+            required></textarea>
+          <input type="file" name="image" class="border rounded w-full p-2" />
+          <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Post</button>
         </form>
-      </div>
-    <% }) %>
-  </section>
-  
+      </section>
 
-<!-- Job Section -->
+      <!-- Jobs -->
       <section id="jobs" class="section hidden">
-        <h2 class="text-xl font-semibold mb-4">Job Updates</h2>
-        <form action="/jobs" method="POST" class="space-y-3">
-          <input name="title" placeholder="Job Title" class="w-full border rounded p-2" required />
-          <textarea name="description" placeholder="Job Description" rows="3" class="w-full border rounded p-2"></textarea>
-          <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Post Job</button>
-        </form>
-        <div class="mt-6 space-y-4">
-          <% jobs.forEach(job => { %>
-            <div class="bg-white p-4 rounded-lg shadow">
-              <h3 class="text-lg font-semibold text-gray-800"><%= job.title %></h3>
-              <p class="text-sm text-gray-600"><%= job.description %></p>
-              <small class="text-gray-500 text-xs">Posted by: <%= job.role %></small>
-            </div>
-          <% }) %>
-        </div>
+        <h2 class="text-xl font-bold mb-4">Jobs</h2>
+        <p class="text-gray-600">Job postings will appear here.</p>
       </section>
 
-<!-- Profile -->
+      <!-- Profile -->
       <section id="profile" class="section hidden">
-        <h2 class="text-xl font-semibold mb-4">Your Profile</h2>
-        <p>This section will soon allow users to update profile details.</p>
+        <h2 class="text-xl font-bold mb-4">Profile</h2>
+
+        <div class="bg-white rounded-lg shadow p-6 space-y-6">
+          <div class="flex items-center space-x-6">
+            <img src="<%= user.profileImage || '/images/default-avatar.png' %>" class="w-24 h-24 rounded-full border">
+            <div>
+              <h3 class="text-2xl font-semibold">
+                <%= user.name %>
+              </h3>
+              <p class="text-gray-600">
+                <%= user.designation || 'No designation yet' %> @ <%= user.currentCompany || 'N/A' %>
+              </p>
+              <p class="text-gray-500 text-sm">
+                <%= user.email %>
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-lg mb-2">About</h4>
+            <p class="text-gray-700">
+              <%= user.bio || 'No bio added yet.' %>
+            </p>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-lg mb-2">Edit Profile</h4>
+            <form action="/profile/update" method="POST" enctype="multipart/form-data" class="space-y-3">
+              <input type="text" name="currentCompany" value="<%= user.currentCompany %>" placeholder="Current Company"
+                class="border rounded w-full p-2">
+              <input type="text" name="designation" value="<%= user.designation %>" placeholder="Designation"
+                class="border rounded w-full p-2">
+              <textarea name="bio" placeholder="Add a short bio..."
+                class="border rounded w-full p-2"><%= user.bio %></textarea>
+              <input type="file" name="profileImage" class="border rounded w-full p-2">
+              <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Update</button>
+            </form>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-lg mb-2">Experience</h4>
+            <% if (user.experience && user.experience.length> 0) { %>
+              <div class="space-y-3">
+                <% user.experience.forEach(exp=> { %>
+                  <div class="border p-3 rounded">
+                    <p class="font-semibold">
+                      <%= exp.position %> at <%= exp.company %>
+                    </p>
+                    <p class="text-gray-600 text-sm">
+                      <%= exp.startDate %> - <%= exp.endDate || 'Present' %>
+                    </p>
+                    <p class="text-gray-700">
+                      <%= exp.description %>
+                    </p>
+                  </div>
+                  <% }) %>
+              </div>
+              <% } else { %>
+                <p class="text-gray-600">No experience added yet.</p>
+                <% } %>
+
+                  <form action="/profile/experience" method="POST" class="mt-4 space-y-3">
+                    <input type="text" name="company" placeholder="Company" class="border rounded w-full p-2" required>
+                    <input type="text" name="position" placeholder="Position" class="border rounded w-full p-2"
+                      required>
+                    <div class="flex space-x-3">
+                      <input type="text" name="startDate" placeholder="Start Date" class="border rounded w-full p-2"
+                        required>
+                      <input type="text" name="endDate" placeholder="End Date (or Present)"
+                        class="border rounded w-full p-2">
+                    </div>
+                    <textarea name="description" placeholder="Describe your role"
+                      class="border rounded w-full p-2"></textarea>
+                    <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Add
+                      Experience</button>
+                  </form>
+          </div>
+        </div>
       </section>
-      
     </main>
   </div>
 
+  <!-- JS -->
   <script>
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
+    function showSection(id, element) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+      const section = document.getElementById(id);
+      if (!section) return;
+      section.classList.remove('hidden');
+      gsap.fromTo(section, { opacity: 0 }, { opacity: 1, duration: 0.5 });
+
+      document.querySelectorAll('.nav-icon').forEach(icon => icon.classList.remove('active'));
+      if (element) element.classList.add('active');
     }
+
+    window.onload = function () {
+      gsap.from("header", { opacity: 0, y: -50, duration: 1 });
+      gsap.from("aside", { opacity: 0, x: -100, duration: 1, delay: 0.5 });
+    };
   </script>
 </body>
+
 </html>

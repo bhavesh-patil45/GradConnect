@@ -1,61 +1,110 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
 body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f1f2f5;
-  }
-  
-  .navbar {
-    background-color: white;
-    padding: 10px 30px;
-    display: flex;
-    justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .nav-links a {
-    margin: 0 10px;
-    text-decoration: none;
-    color: #333;
-    font-weight: 500;
-  }
-  
+  background: #f4f4f4;
+  color: #333;
+}
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #2b2f4c;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 0;
+  transition: width 0.3s ease;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar .nav-item {
+  padding: 15px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.3s ease;
+}
+
+.sidebar .nav-item:hover,
+.sidebar .nav-item.active {
+  background: #3d4270;
+}
+
+.sidebar .nav-item i {
+  font-size: 1.2rem;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  background: #fff;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.post-btn {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #2b2f4c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.post-btn:hover {
+  background: #3d4270;
+}
+
+/* Responsive Sidebar */
+@media (max-width: 768px) {
   .dashboard-container {
-    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    padding: 10px 0;
+  }
+
+  .sidebar .nav-item span {
+    display: none;
+  }
+
+  .main-content {
     padding: 20px;
   }
-  
-  .feed {
-    flex: 2;
-    margin-right: 20px;
-  }
-  
-  .post-card {
-    background: white;
-    margin-bottom: 20px;
-    padding: 10px;
-    border-radius: 10px;
-  }
-  
-  .post-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .post-image {
-    width: 100%;
-    margin-top: 10px;
-    border-radius: 10px;
-  }
-  
-  .sidebar {
-    flex: 1;
-  }
-  
-  .suggestions, .jobs {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-  
+}
