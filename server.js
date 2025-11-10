@@ -1,4 +1,4 @@
-// server.js — Final Stable Version (LinkedIn-style Profile + Fully Functional Backend)
+// =================== server.js — FINAL STABLE VERSION ===================
 
 const express = require('express');
 const app = express();
@@ -11,7 +11,8 @@ const socketIo = require('socket.io');
 const http = require('http').createServer(app);
 const io = socketIo(http);
 
-// Models
+// =================== MODELS ===================
+const User = require('./models/User');
 const Student = require('./models/Student');
 const Alumni = require('./models/Alumni');
 const Admin = require('./models/Admin');
@@ -19,59 +20,58 @@ const Post = require('./models/Post');
 const Job = require('./models/Job');
 const Notification = require('./models/Notification');
 
-// Set EJS
+// =================== APP SETTINGS ===================
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
-// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
+
 app.use(
   session({
     secret: "gradconnect_secret",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
   })
 );
 
-// MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/gradconnect', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('✅ MongoDB connected'))
+// =================== DATABASE CONNECTION ===================
+mongoose.connect('mongodb://127.0.0.1:27017/gradconnect')
+  .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// File Uploads for posts
+// =================== FILE UPLOAD CONFIG ===================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "public/uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// File Uploads for profile pictures
 const uploadProfilePic = multer({
   storage: multer.diskStorage({
     destination: 'public/uploads/profiles',
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-  })
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+  }),
 });
 
-// Socket.IO — chat
+// =================== SOCKET.IO CHAT ===================
 io.on('connection', socket => {
   console.log('💬 A user connected');
   socket.on('chatMessage', msg => io.emit('chatMessage', msg));
 });
 
-// Authentication check
+// =================== AUTH MIDDLEWARE ===================
 function isAuthenticated(req, res, next) {
   if (req.session.user && req.session.role) return next();
   res.redirect('/login');
 }
 
-// Routes
+// =================== ROUTES ===================
+
+// ---------- ROLE SELECTION ----------
 app.get('/', (req, res) => res.render('select-role'));
 
+// ---------- LOGIN & REGISTER ----------
 app.get('/login', (req, res) => {
   const role = req.query.role || '';
   res.render('login', { role, error: null });
@@ -90,7 +90,7 @@ app.post('/forgot-password', async (req, res) => {
   res.render('forgot-password', { role, message: msg });
 });
 
-// Registration routes
+// ---------- REGISTER ----------
 app.get('/admin/register', (req, res) => res.render('admin-register'));
 app.get('/student/register', (req, res) => res.render('student-register'));
 app.get('/alumni/register', (req, res) => res.render('alumni-register'));
@@ -125,7 +125,7 @@ app.post('/alumni/register', async (req, res) => {
   res.render('success', { name, loginRoute: '/login?role=alumni' });
 });
 
-// Login route
+// ---------- LOGIN ----------
 app.post('/login', async (req, res) => {
   const { email, password, role } = req.body;
   const Model = role === "Admin" ? Admin : role === "Student" ? Student : Alumni;
@@ -138,13 +138,16 @@ app.post('/login', async (req, res) => {
   res.render('login', { role, error: 'Invalid email or password.' });
 });
 
-// Dashboard
+// =================== DASHBOARD ===================
 app.get("/dashboard", isAuthenticated, async (req, res) => {
   const user = req.session.user;
   const role = req.session.role;
 
-  const posts = await Post.find().sort({ createdAt: -1 });
-  const myposts = await Post.find({ createdBy: user._id }).sort({ createdAt: -1 });
+  // ✅ Ensure posts have user data populated properly
+  const posts = await Post.find()
+    .sort({ _id: -1 })
+    .populate("userId", "name email profileImage");
+
   const jobs = await Job.find().sort({ createdAt: -1 });
   const notifications = await Notification.find({ user: user._id }).sort({ createdAt: -1 });
 
@@ -153,34 +156,37 @@ app.get("/dashboard", isAuthenticated, async (req, res) => {
     role,
     user,
     posts,
-    myposts,
     jobs,
     notifications
   });
 });
 
-// Logout
+// =================== LOGOUT ===================
 app.get('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) return res.send('Logout error');
-    res.redirect('/login');
-  });
+  req.session.destroy(() => res.redirect('/login'));
 });
 
-// Create post
-app.post('/post', isAuthenticated, upload.single('image'), async (req, res) => {
-  const { content } = req.body;
-  const { user, role } = req.session;
-  const image = req.file ? '/uploads/' + req.file.filename : null;
+// =================== CREATE POST ===================
+app.post('/post/create', isAuthenticated, upload.single('image'), async (req, res) => {
+  try {
+    const { caption } = req.body;
+    const userId = req.session.user._id;
+    const image = req.file ? '/uploads/' + req.file.filename : null;
 
-  const newPost = new Post({ content, image, createdBy: user._id, role });
-  await newPost.save();
+    const newPost = new Post({ caption, image, userId });
+    await newPost.save();
 
-  await Notification.create({ user: user._id, message: "Your post has been created!" });
-  res.redirect("/dashboard");
+    // ✅ Create a notification for the user
+    await Notification.create({ user: userId, message: "Your post has been created!" });
+
+    res.redirect("/dashboard");
+  } catch (err) {
+    console.error("❌ Error creating post:", err);
+    res.status(500).send("Error creating post");
+  }
 });
 
-// Like post
+// =================== LIKE & COMMENT ===================
 app.post('/post/:id/like', isAuthenticated, async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (post) {
@@ -190,68 +196,49 @@ app.post('/post/:id/like', isAuthenticated, async (req, res) => {
   res.redirect('/dashboard');
 });
 
-// Comment post
 app.post('/post/:id/comment', isAuthenticated, async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (post) {
-    const comment = { user: req.session.user.name || req.session.user.username, text: req.body.text };
-    post.comments.push(comment);
+    post.comments.push({
+      text: req.body.text,
+      user: req.session.user._id
+    });
     await post.save();
   }
   res.redirect('/dashboard');
 });
 
-app.post('/post', isAuthenticated, upload.single('image'), async (req, res) => {
+// Create a new Job
+app.post('/job/create', isAuthenticated, async (req, res) => {
   try {
-    const { content } = req.body; // from <textarea name="content">
-    const image = req.file ? '/uploads/' + req.file.filename : null;
-
-    // make sure you have req.session.userId or derive from req.session.user
-    const userId = req.session.user ? req.session.user._id : null;
-
-    if (!userId) {
-      console.log("⚠️ Missing userId in session");
-      return res.redirect('/login');
-    }
-
-    const newPost = new Post({
-      caption: content, // ✅ map content → caption
-      image,
-      userId
+    const { title, company, location, description, applyLink } = req.body;
+    const newJob = new Job({
+      title,
+      company,
+      location,
+      description,
+      applyLink,
+      postedBy: req.session.user._id
     });
-
-    await newPost.save();
-    console.log("✅ Post created successfully");
-    res.redirect('/dashboard');
+    await newJob.save();
+    res.redirect('/dashboard#jobs');
   } catch (err) {
-    console.error("❌ Error creating post:", err);
-    res.status(500).send("Error creating post");
+    console.error("❌ Error creating job:", err);
+    res.status(500).send("Error creating job");
   }
 });
 
-// ====================== PROFILE MANAGEMENT ======================
-
-// Update Profile Info (bio, company, designation, profile picture)
+// =================== PROFILE UPDATE ===================
 app.post("/profile/update", isAuthenticated, uploadProfilePic.single("profileImage"), async (req, res) => {
   try {
     const { bio, currentCompany, designation } = req.body;
-    const userId = req.session.user._id;
-
     const updateData = { bio, currentCompany, designation };
-    if (req.file) {
-      updateData.profileImage = "/uploads/profiles/" + req.file.filename;
-    }
+    if (req.file) updateData.profileImage = "/uploads/profiles/" + req.file.filename;
 
-    // Update for all roles
-    let Model;
-    if (req.session.role === "Alumni") Model = Alumni;
-    else if (req.session.role === "Student") Model = Student;
-    else Model = Admin;
+    const Model = req.session.role === "Alumni" ? Alumni : req.session.role === "Student" ? Student : Admin;
+    const updatedUser = await Model.findByIdAndUpdate(req.session.user._id, updateData, { new: true });
 
-    const updatedUser = await Model.findByIdAndUpdate(userId, updateData, { new: true });
-    req.session.user = updatedUser; // refresh session
-
-    console.log("✅ Profile updated:", updatedUser);
+    req.session.user = updatedUser;
     res.redirect("/dashboard#profile");
   } catch (error) {
     console.error("Profile update error:", error);
@@ -259,21 +246,16 @@ app.post("/profile/update", isAuthenticated, uploadProfilePic.single("profileIma
   }
 });
 
-
-// Add Experience (company, position, start & end dates)
+// =================== ADD EXPERIENCE ===================
 app.post("/profile/experience", isAuthenticated, async (req, res) => {
   try {
     const { company, position, startDate, endDate, description } = req.body;
-    const userId = req.session.user._id;
-
     const updatedUser = await Alumni.findByIdAndUpdate(
-      userId,
+      req.session.user._id,
       { $push: { experience: { company, position, startDate, endDate, description } } },
       { new: true }
     );
-
     req.session.user = updatedUser;
-    console.log("✅ Experience added for user:", updatedUser.name);
     res.redirect("/dashboard#profile");
   } catch (error) {
     console.error("Experience add error:", error);
@@ -281,8 +263,6 @@ app.post("/profile/experience", isAuthenticated, async (req, res) => {
   }
 });
 
+// =================== SERVER START ===================
 const PORT = process.env.PORT || 3000;
-
-http.listen(PORT, () => {
-  console.log(`✅ Server is running at http://localhost:${PORT}`);
-});
+http.listen(PORT, () => console.log(`✅ Server is running at http://localhost:${PORT}`));

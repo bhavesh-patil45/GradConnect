@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Create Post</title>
+</head>
+
+<body>
+    <h1>Create a New Post</h1>
+    <form action="/post/create" method="POST">
+        <label>Caption:</label>
+        <input type="text" name="caption" required /><br /><br />
+
+        <label>Image URL (optional):</label>
+        <input type="text" name="imageUrl" /><br /><br />
+
+        <button type="submit">Post</button>
+    </form>
+</body>
+
+</html>
